@@ -1,4 +1,5 @@
-package com.example.entrega.LicaoEntrega.strategy;
+package com.example.entrega.licaoentrega.strategy;
 
-public class FreteStrategy {
+public interface FreteStrategy {
+    double calcularFrete(double peso, double distancia);
 }
