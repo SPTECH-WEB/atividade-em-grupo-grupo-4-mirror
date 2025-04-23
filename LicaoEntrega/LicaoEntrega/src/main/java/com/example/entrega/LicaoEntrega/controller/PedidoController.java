@@ -1,6 +1,18 @@
 package com.example.entrega.LicaoEntrega.controller;
 
+import com.example.entrega.LicaoEntrega.Observer.EmailObserver;
+import com.example.entrega.LicaoEntrega.Observer.LogObserver;
+import com.example.entrega.LicaoEntrega.Observer.SmsObserver;
 import com.example.entrega.LicaoEntrega.model.Pedido;
+import com.example.entrega.LicaoEntrega.Observer.Notificador;
+import com.example.entrega.licaoentrega.strategy.CalculadoraFrete;
+import com.example.entrega.licaoentrega.strategy.FreteEconomicoStrategy;
+import com.example.entrega.licaoentrega.strategy.FreteExpressoStrategy;
+import com.example.entrega.licaoentrega.strategy.FreteTransportadoraStrategy;
+import com.example.entrega.LicaoEntrega.repository.PedidoRepository;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -9,21 +21,54 @@ import java.util.List;
 @RequestMapping("/pedidos")
 public class PedidoController {
 
-    private final PedidoService pedidoService;
+    @Autowired
+    private PedidoRepository pedidoRepository;
 
-    public PedidoController(PedidoService pedidoService) {
-        this.pedidoService = pedidoService;
+    private Notificador notificador = new Notificador();
+
+    @PostConstruct
+    public void init() {
+        notificador.adicionarObserver(new EmailObserver());
+        notificador.adicionarObserver(new LogObserver());
+        notificador.adicionarObserver(new SmsObserver());
     }
-
 
     @PostMapping
-    public Pedido criarPedido(@RequestBody Pedido pedido) {
-        return pedidoService.criarEPersistirPedido(pedido);
+    public ResponseEntity<Pedido> criarPedido(@RequestBody Pedido pedido) {
+        // Salvar o pedido no repositório
+        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+        // Calcular o frete
+        double distancia = 10.0; // Exemplo de distância fixa
+        CalculadoraFrete calculadoraFrete = new CalculadoraFrete();
+
+        // Definir a estratégia de frete com base no tipo de entrega
+        switch (pedido.getTipoEntrega()) {
+            case "economica":
+                calculadoraFrete.setEstrategia(new FreteEconomicoStrategy());
+                break;
+            case "expressa":
+                calculadoraFrete.setEstrategia(new FreteExpressoStrategy());
+                break;
+            case "transportadora":
+                calculadoraFrete.setEstrategia(new FreteTransportadoraStrategy());
+                break;
+            default:
+                return ResponseEntity.badRequest().build();
+        }
+
+        // Calcular o valor do frete
+        double valorFrete = calculadoraFrete.calcular(pedido.getPeso(), distancia);
+        System.out.println("Valor do frete para o pedido: " + valorFrete);
+
+
+        notificador.notificar(pedido);
+
+        return ResponseEntity.ok(pedidoSalvo);
     }
 
-
     @GetMapping
-    public List<Pedido> listarTodosPedidos() {
-        return pedidoService.listarPedidos();
+    public List<Pedido> listarPedidos() {
+        return pedidoRepository.findAll();
     }
 }

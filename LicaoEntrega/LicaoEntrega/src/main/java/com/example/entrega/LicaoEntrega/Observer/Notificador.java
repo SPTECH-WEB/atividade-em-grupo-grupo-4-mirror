@@ -2,7 +2,8 @@ package com.example.entrega.LicaoEntrega.Observer;
 
 import com.example.entrega.LicaoEntrega.model.Pedido;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Notificador {
     private List<Observer> observers = new ArrayList<>();

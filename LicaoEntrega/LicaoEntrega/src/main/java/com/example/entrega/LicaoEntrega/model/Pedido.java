@@ -7,7 +7,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-
 public class Pedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,4 +15,6 @@ public class Pedido {
     private String cliente;
     private String produto;
     private Double peso;
+
+    private String tipoEntrega;
 }
