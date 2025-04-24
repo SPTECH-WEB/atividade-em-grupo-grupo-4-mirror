@@ -1,4 +1,4 @@
-package com.example.entrega.licaoentrega.strategy;
+package com.example.entrega.LicaoEntrega.strategy;
 
 public class CalculadoraFrete {
     private FreteStrategy estrategia;
